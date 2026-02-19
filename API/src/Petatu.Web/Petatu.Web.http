@@ -1,0 +1,6 @@
+@Petatu.Web_HostAddress = http://localhost:5240
+
+GET {{Petatu.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
