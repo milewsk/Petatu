@@ -1,0 +1,17 @@
+# Exclude directories not needed for the API build
+WebApp/
+MobileApp/
+.git/
+.github/
+.vs/
+.idea/
+.vscode/
+
+# Exclude build output – these are regenerated inside the container
+**/bin/
+**/obj/
+
+# Miscellaneous
+**/*.user
+**/*.suo
+**/.DS_Store

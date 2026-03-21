@@ -1,0 +1,69 @@
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:     ${POSTGRES_USER:-petatu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-petatu_pass}
+      POSTGRES_DB:       ${POSTGRES_DB:-petatu_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-petatu} -d ${POSTGRES_DB:-petatu_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── .NET 9 Web API ──────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: API/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__DefaultConnection: >-
+        Host=db;Port=5432;
+        Database=${POSTGRES_DB:-petatu_db};
+        Username=${POSTGRES_USER:-petatu};
+        Password=${POSTGRES_PASSWORD:-petatu_pass}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── React Web App ──────────────────────────────────────────────────────────
+  web:
+    build:
+      context: ./WebApp
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+  # ── React Native – Metro Dev Server (Android / cross-platform dev only) ────
+  # NOTE: iOS (Swift) builds CANNOT run inside Docker. They require macOS +
+  #       Xcode. Use this service only for the Metro bundler during Android
+  #       development or Jest tests.
+  #
+  # mobile:
+  #   build:
+  #     context: ./MobileApp
+  #     dockerfile: Dockerfile
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8081:8081"   # Metro bundler
+  #   volumes:
+  #     - ./MobileApp:/app
+  #     - /app/node_modules
+  #   command: ["npx", "react-native", "start"]
+
+volumes:
+  postgres_data:
