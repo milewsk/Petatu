@@ -1,6 +1,1 @@
-namespace Petatu.CleanArchitectureTests;
-
-public class GlobalUsings
-{
-    
-}
+global using Xunit;
